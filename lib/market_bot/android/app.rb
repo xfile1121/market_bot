@@ -54,17 +54,17 @@ module MarketBot
 
           case field_name
           when 'datePublished'
-            result[:updated] = content.text
+            result[:updated] = content.text.strip
           when 'fileSize'
-            result[:current_version] = content.text
+            result[:size] = content.text.strip
           when 'numDownloads'
-            result[:installs] = content.text
+            result[:installs] = content.text.strip
           when 'softwareVersion'
-            result[:current_version] = content.text
+            result[:current_version] = content.text.strip
           when 'operatingSystems'
-            result[:requires_android] = content.text
+            result[:requires_android] = content.text.strip
           when 'contentRating'
-            result[:content_rating] = content.text
+            result[:content_rating] = content.text.strip
           end
 
         end
@@ -82,7 +82,7 @@ module MarketBot
         votes_elem = doc.css('.reviews-num')
         result[:votes] = votes_elem.first.text unless votes_elem.empty?
 
-        result[:developer] = doc.css("[@itemprop='name']").first.text
+        result[:developer] = doc.css("[@class='document-subtitle primary']").first.text
 
         result[:more_from_developer] = []
         result[:users_also_installed] = []
