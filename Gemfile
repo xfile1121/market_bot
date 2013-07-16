@@ -12,5 +12,7 @@ group :development do
   gem 'guard', '~> 1.2.3'
   gem 'guard-rspec', '~> 1.1.0'
   gem 'growl'
+  gem "watir", "~>4.0"
+  gem 'headless'
   platform(:ruby) { gem 'debugger' }
 end
