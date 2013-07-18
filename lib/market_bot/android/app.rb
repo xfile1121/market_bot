@@ -208,7 +208,7 @@ module MarketBot
         @request_opts = options[:request_opts] || {}
         @callback = nil
         @error = nil
-        @phantom_option = '--load-image=no'
+        @phantom_option = '--load-images=no'
       end
 
       def market_url
