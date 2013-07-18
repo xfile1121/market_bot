@@ -208,6 +208,7 @@ module MarketBot
         @request_opts = options[:request_opts] || {}
         @callback = nil
         @error = nil
+        @phantom_option = '--load-image=no'
       end
 
       def market_url
@@ -215,14 +216,12 @@ module MarketBot
       end
 
       def update
-        Headless.ly do
-          browser = Watir::Browser.new :firefox
-          browser.goto market_url
-          html = browser.html
-          browser.close
-          result = App.parse(html)
-          update_callback(result)
-        end
+        browser = Watir::Browser.new(:phantomjs, :args => @phantom_option)
+        browser.goto market_url
+        html = browser.html
+        browser.close
+        result = App.parse(html)
+        update_callback(result)
 
         self
       end
@@ -250,14 +249,12 @@ module MarketBot
 
         # hydra.queue(request)
 
-        Headless.ly do
-          browser = Watir::Browser.new :firefox
-          browser.goto market_url
-          html = browser.html
-          browser.close
-          result = App.parse(html)
-          update_callback(result)
-        end
+        browser = Watir::Browser.new(:phantomjs, :args => @phantom_option)
+        browser.goto market_url
+        html = browser.html
+        browser.close
+        result = App.parse(html)
+        update_callback(result)
 
         self
       end
