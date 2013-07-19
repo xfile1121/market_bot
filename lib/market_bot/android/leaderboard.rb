@@ -17,30 +17,36 @@ module MarketBot
         results = []
         doc = Nokogiri::HTML(html)
 
-        doc.css('.snippet').each do |snippet_node|
+        # doc.css('.snippet').each do |snippet_node|
+        #   result = {}
+
+        #   details_node = snippet_node.css('.details')
+
+        #   unless snippet_node.css('.ratings').empty?
+        #     stars_text = snippet_node.css('.ratings').first.attributes['title'].value
+        #     result[:stars] = /Rating: (.+) stars .*/.match(stars_text)[1]
+        #   else
+        #     result[:stars] = nil
+        #   end
+
+        #   result[:title] = details_node.css('.title').first.attributes['title'].to_s
+
+        #   if (price_elem = details_node.css('.buy-button-price').children.first)
+        #     result[:price_usd] = price_elem.text.gsub(' Buy', '')
+        #   end
+
+        #   result[:developer] = details_node.css('.attribution').children.first.text
+        #   result[:market_id] = details_node.css('.title').first.attributes['href'].to_s.gsub('/store/apps/details?id=', '').gsub(/&feature=.*$/, '')
+        #   result[:market_url] = "https://play.google.com/store/apps/details?id=#{result[:market_id]}&hl=en"
+
+        #   result[:price_usd] = '$0.00' if result[:price_usd] == 'Install'
+
+        #   results << result
+        # end
+
+        doc.css('.card-content').each do |node|
           result = {}
-
-          details_node = snippet_node.css('.details')
-
-          unless snippet_node.css('.ratings').empty?
-            stars_text = snippet_node.css('.ratings').first.attributes['title'].value
-            result[:stars] = /Rating: (.+) stars .*/.match(stars_text)[1]
-          else
-            result[:stars] = nil
-          end
-
-          result[:title] = details_node.css('.title').first.attributes['title'].to_s
-
-          if (price_elem = details_node.css('.buy-button-price').children.first)
-            result[:price_usd] = price_elem.text.gsub(' Buy', '')
-          end
-
-          result[:developer] = details_node.css('.attribution').children.first.text
-          result[:market_id] = details_node.css('.title').first.attributes['href'].to_s.gsub('/store/apps/details?id=', '').gsub(/&feature=.*$/, '')
-          result[:market_url] = "https://play.google.com/store/apps/details?id=#{result[:market_id]}&hl=en"
-
-          result[:price_usd] = '$0.00' if result[:price_usd] == 'Install'
-
+          result[:market_id] = node.node.css('.card-click-target').first['href'].to_s.gsub('/store/apps/details?id=', '')
           results << result
         end
 
@@ -74,22 +80,23 @@ module MarketBot
         @request_opts = options[:request_opts] || {}
         @parsed_results = []
         @pending_pages = []
+        @phantom_option = '--load-images=no'
       end
 
       def market_urls(options={})
         results = []
 
         min_page = options[:min_page] || 1
-        max_page = options[:max_page] || 25
+        max_page = options[:max_page] || 5
 
         (min_page..max_page).each do |page|
-          start_val = (page - 1) * 24
+          start_val = (page - 1) * 100
 
           url = 'https://play.google.com/store/apps'
           url << "/category/#{category.to_s.upcase}" if category
           url << "/collection/#{identifier.to_s}?"
           url << "start=#{start_val}"
-          url << "&num=24&hl=en"
+          url << "&num=100&hl=en"
 
           results << url
         end
@@ -126,7 +133,7 @@ module MarketBot
       end
 
       def rank_to_page(rank)
-        ((rank - 1) / 24) + 1
+        ((rank - 1) / 100) + 1
       end
 
       def results
@@ -137,15 +144,21 @@ module MarketBot
     private
       def process_page(url, page_num)
         @pending_pages << page_num
-        request = Typhoeus::Request.new(url, @request_opts)
-        request.on_complete do |response|
-          # HACK: Typhoeus <= 0.4.2 returns a response, 0.5.0pre returns the request.
-          response = response.response if response.is_a?(Typhoeus::Request)
+        # request = Typhoeus::Request.new(url, @request_opts)
+        # request.on_complete do |response|
+        #   # HACK: Typhoeus <= 0.4.2 returns a response, 0.5.0pre returns the request.
+        #   response = response.response if response.is_a?(Typhoeus::Request)
 
-          result = Leaderboard.parse(response.body)
-          update_callback(result, page_num)
-        end
-        @hydra.queue(request)
+        #   result = Leaderboard.parse(response.body)
+        #   update_callback(result, page_num)
+        # end
+        # @hydra.queue(request)
+
+        browser = Watir::Browser.new(:phantomjs, :args => @phantom_option)
+        browser.goto market_url
+        result = Leaderboard.parse(browser.html)
+        update_callback(result, page_num)
+
       end
 
       def update_callback(result, page)
