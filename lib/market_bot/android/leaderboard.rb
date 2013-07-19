@@ -46,7 +46,7 @@ module MarketBot
 
         doc.css('.card-content').each do |node|
           result = {}
-          result[:market_id] = node.node.css('.card-click-target').first['href'].to_s.gsub('/store/apps/details?id=', '')
+          result[:market_id] = node.css('.card-click-target').first['href'].to_s.gsub('/store/apps/details?id=', '')
           results << result
         end
 
