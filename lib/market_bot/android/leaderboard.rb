@@ -155,7 +155,7 @@ module MarketBot
         # @hydra.queue(request)
 
         browser = Watir::Browser.new(:phantomjs, :args => @phantom_option)
-        browser.goto market_url
+        browser.goto url
         result = Leaderboard.parse(browser.html)
         update_callback(result, page_num)
 
