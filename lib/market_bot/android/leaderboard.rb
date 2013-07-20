@@ -157,6 +157,7 @@ module MarketBot
         browser = Watir::Browser.new(:phantomjs, :args => @phantom_option)
         browser.goto url
         result = Leaderboard.parse(browser.html)
+        browser.close
         update_callback(result, page_num)
 
       end
